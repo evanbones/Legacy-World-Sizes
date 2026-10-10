@@ -2,7 +2,6 @@ package wily.legacy_world_sizes.mixin.base.client;
 
 import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.util.Util;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ProgressScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
@@ -44,10 +43,14 @@ public abstract class CreateWorldScreenMixin extends Screen {
 
     @Shadow protected abstract void onCreate();
 
+    //? if >=1.21.2 {
     @Inject(method = "onCreate", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/worldselection/CreateWorldScreen;createLevelSettings(Z)Lnet/minecraft/world/level/LevelSettings;"), cancellable = true)
-    private void onCreate(CallbackInfo ci, @Local LayeredRegistryAccess<RegistryLayer> registryAccess) {
+    //?} else {
+    /*@Inject(method = "onCreate", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/worldselection/WorldOpenFlows;confirmWorldCreation(Lnet/minecraft/client/Minecraft;Lnet/minecraft/client/gui/screens/worldselection/CreateWorldScreen;Lcom/mojang/serialization/Lifecycle;Ljava/lang/Runnable;Z)V"), cancellable = true)
+    *///?}
+    private void onCreate(CallbackInfo ci, @Local(name = "finalLayers") LayeredRegistryAccess<RegistryLayer> finalLayers) {
         if (!foundBalancedSeed && uiState.getSeed().isBlank() && LWSWorldOptions.balancedSeed.get()) {
-            LWSWorldOptions.setupLegacyWorldSize(registryAccess.compositeAccess());
+            LWSWorldOptions.setupLegacyWorldSize(finalLayers.compositeAccess());
             LegacyLevelLimit limit = LWSWorldOptions.legacyLevelLimits.get().get(Level.OVERWORLD);
             if (limit != null) {
                 ProgressScreen screen = new ProgressScreen(false) {
@@ -61,12 +64,12 @@ public abstract class CreateWorldScreenMixin extends Screen {
                 screen.progressStart(LWSComponents.INITIALIZING_SERVER);
                 screen.progressStage(LWSComponents.FINDING_SEED);
                 minecraft.setScreen(screen);
-                LegacyChunkBounds bounds = limit.bounds().get(0);
+                LegacyChunkBounds bounds = limit.bounds().getFirst();
                 ci.cancel();
                 CompletableFuture.runAsync(() -> {
-                    uiState.setSettings(uiState.getSettings().withOptions(options -> options.withSeed(OptionalLong.of(bounds.findBalancedSeed(registryAccess.compositeAccess(), 100)))));
+                    uiState.setSettings(uiState.getSettings().withOptions(options -> options.withSeed(OptionalLong.of(bounds.findBalancedSeed(finalLayers.compositeAccess(), 100)))));
                     minecraft.execute(() -> {
-                        //Making sure if any problem happens with the world creation, it won't be stuck in the progress screen
+                        // Making sure if any problem happens with the world creation, it won't be stuck in the progress screen
                         minecraft.setScreen(CreateWorldScreenMixin.this);
                         foundBalancedSeed = true;
                         onCreate();
