@@ -1,6 +1,8 @@
+import net.fabricmc.loom.api.LoomGradleExtensionAPI
+
 plugins {
 	id("mod-platform")
-	id("net.fabricmc.fabric-loom")
+	id("dev.kikugie.loom-back-compat")
 }
 
 platform {
@@ -26,8 +28,21 @@ configurations.configureEach {
 	}
 }
 
-loom {
-	accessWidenerPath = rootProject.file(platform.awFile)
+val isUnobfuscated = loomx.isUnobfuscated
+
+fun String.toNamedAccessWidener() = replaceFirst(Regex("^(accessWidener\\s+v\\d+\\s+)official"), "$1named")
+
+val accessWidener = if (isUnobfuscated) rootProject.file(platform.awFile) else layout.buildDirectory.file("aw/${rootProject.file(platform.awFile).name}").get().asFile.apply {
+	parentFile.mkdirs()
+	writeText(rootProject.file(platform.awFile).readText().toNamedAccessWidener())
+}
+
+if (!isUnobfuscated) tasks.named<ProcessResources>("processResources") {
+	filesMatching("aw/*.accesswidener") { filter { it.toNamedAccessWidener() } }
+}
+
+extensions.configure<LoomGradleExtensionAPI>("loom") {
+	accessWidenerPath = accessWidener
 	runs.named("client") {
 		client()
 		ideConfigGenerated(true)
@@ -43,12 +58,9 @@ loom {
 		environment = "server"
 		configName = "Fabric Server"
 	}
-}
-
-fabricApi {
-	configureDataGeneration {
-		outputDirectory = file("${rootDir}/versions/datagen/${stonecutter.current.version.split("-")[0]}/src/main/generated")
-		client = true
+	if (!isUnobfuscated) mixin {
+		useLegacyMixinAp = true
+		defaultRefmapName = "${prop("mod_id")}.refmap.json"
 	}
 }
 
@@ -62,11 +74,12 @@ repositories {
 
 dependencies {
 	minecraft("com.mojang:minecraft:${stonecutter.current.version}")
-	implementation(libs.fabric.loader)
-	implementation("net.fabricmc.fabric-api:fabric-api:${prop("fabric_api_version")}")
-	implementation("com.terraformersmc:modmenu:${prop("modmenu_version")}")
-	api("wily.factory_api:factory_api-fabric:${stonecutter.current.version}-${prop("factory_api_version")}")
-	implementation("wily.legacy:legacy-fabric:${stonecutter.current.version}-${prop("legacy4j_version")}")
+	loomx.applyMojangMappings()
+	modImplementation(libs.fabric.loader)
+	modImplementation("net.fabricmc.fabric-api:fabric-api:${prop("fabric_api_version")}")
+	modImplementation("com.terraformersmc:modmenu:${prop("modmenu_version")}")
+	modApi("wily.factory_api:factory_api-fabric:${stonecutter.current.version}-${prop("factory_api_version")}")
+	modImplementation("wily.legacy:legacy-fabric:${stonecutter.current.version}-${prop("legacy4j_version")}") { isTransitive = isUnobfuscated }
 
 	implementation(libs.moulberry.mixinconstraints)
 	include(libs.moulberry.mixinconstraints)

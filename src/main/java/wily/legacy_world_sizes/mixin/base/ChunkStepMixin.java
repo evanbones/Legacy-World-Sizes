@@ -9,7 +9,6 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.ProtoChunk;
-import net.minecraft.world.level.chunk.UpgradeData;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.level.chunk.status.ChunkStatusTask;
 import net.minecraft.world.level.chunk.status.ChunkStep;
@@ -21,6 +20,7 @@ import wily.legacy_world_sizes.config.LWSWorldOptions;
 import wily.legacy_world_sizes.level.FakeLevelChunk;
 import wily.legacy_world_sizes.level.FakeProtoChunk;
 import wily.legacy_world_sizes.util.LegacyLevelLimit;
+import wily.legacy_world_sizes.util.VersionCompat;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -38,7 +38,11 @@ public class ChunkStepMixin {
                 return CompletableFuture.supplyAsync(() -> {
                     fakeChunk.fillBiomesFromNoise(context.generator().getBiomeSource(), context.level().getChunkSource().randomState().sampler());
                     return fakeChunk;
+                //? if >=1.21.2 {
                 }, Util.backgroundExecutor().forName("init_biomes"));
+                //?} else {
+                /*}, Util.backgroundExecutor());
+                *///?}
             } else if (chunkStep.targetStatus() == ChunkStatus.INITIALIZE_LIGHT) {
                 validStep = true;
             } else if (chunkStep.targetStatus() == ChunkStatus.LIGHT) {
@@ -52,8 +56,8 @@ public class ChunkStepMixin {
 
         if (!validStep && !LWSWorldOptions.isValidPos(context.level().dimension(), chunkAccess.getPos())) {
             LegacyLevelLimit limit = LWSWorldOptions.legacyLevelLimits.get().get(context.level().dimension());
-            ProtoChunk protoChunk = FakeLevelChunk.ContentType.CACHE.computeIfAbsent(limit.content(), content -> content.fill(context.level(), new ProtoChunk(ChunkPos.ZERO, UpgradeData.EMPTY, context.level(), context.level().palettedContainerFactory(), null)));
-            FakeLevelChunk fakeChunk = new FakeLevelChunk(context.level(), chunkAccess.getPos(), Arrays.stream(protoChunk.getSections()).map(LevelChunkSection::copy).toArray(LevelChunkSection[]::new), limit.heightFallOff() && limit.bounds().stream().anyMatch(bounds -> bounds.isOutsideBorder(chunkAccess.getPos().x(), chunkAccess.getPos().z())), limit.fixedBiome().orElse(null));
+            ProtoChunk protoChunk = FakeLevelChunk.ContentType.CACHE.computeIfAbsent(limit.content(), content -> content.fill(context.level(), VersionCompat.createProtoChunk(context.level(), ChunkPos.ZERO)));
+            FakeLevelChunk fakeChunk = new FakeLevelChunk(context.level(), chunkAccess.getPos(), Arrays.stream(protoChunk.getSections()).map(VersionCompat::copySection).toArray(LevelChunkSection[]::new), limit.heightFallOff() && limit.bounds().stream().anyMatch(bounds -> bounds.isOutsideBorder(chunkAccess.getPos().x(), chunkAccess.getPos().z())), limit.fixedBiome().orElse(null));
 
             for (Map.Entry<Heightmap.Types, Heightmap> entry : protoChunk.getHeightmaps()) {
                 if (ChunkStatus.SURFACE.heightmapsAfter().contains(entry.getKey())) {

@@ -21,6 +21,7 @@
     "EndDragonFightMixin",
     "EndIslandDensityFunctionMixin",
     "TheEndBiomeSourceMixin",
+    "TheEndGatewayBlockEntityMixin",
     "EndCityStructureMixin",
     "TemplateStructurePieceAccessor",
     "ChunkAccessAccessor",

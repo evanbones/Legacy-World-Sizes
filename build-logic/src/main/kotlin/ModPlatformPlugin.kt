@@ -43,13 +43,14 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 		val inferredLoader = project.buildFile.name.substringAfter('.').replace(".gradle.kts", "")
 		val inferredLoaderIsFabric = inferredLoader == "fabric"
 
+		val stonecutter = extensions.getByType<StonecutterBuildExtension>()
+		val remapsJar = inferredLoaderIsFabric && stonecutter.eval(stonecutter.current.version, "<26.1")
+
 		val extension = extensions.create("platform", ModPlatformExtension::class.java).apply {
 			loader.convention(inferredLoader)
-			jarTask.convention(if (inferredLoaderIsFabric) "remapJar" else "jar")
-			sourcesJarTask.convention(if (inferredLoaderIsFabric) "remapSourcesJar" else "sourcesJar")
+			jarTask.convention(if (remapsJar) "remapJar" else "jar")
+			sourcesJarTask.convention(if (remapsJar) "remapSourcesJar" else "sourcesJar")
 		}
-
-		val stonecutter = extensions.getByType<StonecutterBuildExtension>()
 
 		extension.requiredJava.set(
 			when {
@@ -70,7 +71,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 		extension.awFile.convention("${awPath}.accesswidener")
 		extension.atFile.convention("src/main/resources/META-INF/accesstransformer.cfg")
 
-		if (!inferredLoaderIsFabric && inferredLoader != "fabricmc") {
+		if (!inferredLoaderIsFabric) {
 			val task = project.tasks.register("convertAccessWidener", ConvertAccessWidenerToTransformerTask::class.java) {
 				group = "build setup"
 				description = "Converts a Fabric .accesswidener file to a Forge access transformer .cfg"
@@ -301,11 +302,17 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 	private fun Project.configureStonecutter() {
 		extensions.configure<StonecutterBuildExtension>("stonecutter") {
 			replacements {
-				string(eval(current.version, ">=1.21.11")) {
-					replace("net.minecraft.resources.ResourceLocation", "net.minecraft.resources.Identifier")
+				regex(eval(current.version, ">=1.21.11")) {
+					replace("\\bResourceLocation\\b", "Identifier", "\\bIdentifier\\b", "ResourceLocation")
+					replace("\\.location\\(\\)", ".identifier()", "\\.identifier\\(\\)", ".location()")
 				}
-				string(eval(current.version, ">=1.21.11")) {
-					replace("net/minecraft/resources/ResourceLocation", "net/minecraft/resources/Identifier")
+				regex(eval(current.version, ">=26.1")) {
+					replace("\\.x\\b(?![(\\w])", ".x()", "\\.x\\(\\)", ".x")
+					replace("\\.z\\b(?![(\\w])", ".z()", "\\.z\\(\\)", ".z")
+				}
+				regex(eval(current.version, ">=26.1")) {
+					replace("\\bEndDragonFight\\b", "EnderDragonFight", "\\bEnderDragonFight\\b", "EndDragonFight")
+					replace("\\bSpikeFeature\\b", "EndSpikeFeature", "\\bEndSpikeFeature\\b", "SpikeFeature")
 				}
 				string(eval(current.version, ">=1.21.11")) {
 					replace("writeResourceLocation", "writeIdentifier")

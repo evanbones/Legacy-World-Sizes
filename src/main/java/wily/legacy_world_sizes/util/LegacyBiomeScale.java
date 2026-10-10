@@ -3,6 +3,7 @@ package wily.legacy_world_sizes.util;
 import com.mojang.serialization.Codec;
 import net.minecraft.core.Holder;
 import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
@@ -40,7 +41,7 @@ public record LegacyBiomeScale(Identifier id, Component name, Optional<AddOctave
 
         default void applyToBiomeNoiseParameters(RegistryAccess access) {
             for (ResourceKey<NormalNoise.NoiseParameters> key : BIOME_SCALE_NOISE_PARAMETERS) {
-                access.get(key).ifPresent(this::applyToNoiseParameters);
+                access.lookupOrThrow(Registries.NOISE).get(key).ifPresent(this::applyToNoiseParameters);
             }
         }
     }

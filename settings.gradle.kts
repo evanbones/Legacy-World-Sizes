@@ -22,14 +22,16 @@ pluginManagement {
 plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
     id("dev.kikugie.stonecutter") version "0.9"
+    id("dev.kikugie.loom-back-compat") version "0.3"
 }
 
 stonecutter {
     create(rootProject) {
         fun match(version: String, vararg loaders: String) =
-            loaders.forEach { version("$version-$it", version).buildscript = "build.${if (it == "fabric" && stonecutter.eval(version, ">=26.1")) "fabricmc" else it}.gradle.kts" }
+            loaders.forEach { version("$version-$it", version).buildscript = "build.$it.gradle.kts" }
 
-        match("26.1.2", "fabric", "forge", "neoforge")
+        match("26.1.2", "fabric", "neoforge")
+        match("1.21.1", "fabric", "neoforge")
         vcsVersion = "26.1.2-fabric"
     }
 }

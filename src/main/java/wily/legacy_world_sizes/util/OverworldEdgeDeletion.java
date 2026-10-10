@@ -1,5 +1,6 @@
 package wily.legacy_world_sizes.util;
 
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.DoubleTag;
 import net.minecraft.nbt.ListTag;
@@ -40,7 +41,7 @@ public class OverworldEdgeDeletion {
         int count = deleteChunks(path.resolve("region"), new RegionStorageInfo(name, Level.OVERWORLD, "chunk"), deleted);
         deleteChunks(path.resolve("entities"), new RegionStorageInfo(name, Level.OVERWORLD, "entities"), deleted);
         deleteChunks(path.resolve("poi"), new RegionStorageInfo(name, Level.OVERWORLD, "poi"), deleted);
-        stampBlending(path.resolve("region"), new RegionStorageInfo(name, Level.OVERWORLD, "chunk"), retained, server.registryAccess().getOrThrow(LevelStem.OVERWORLD).value().type().value());
+        stampBlending(path.resolve("region"), new RegionStorageInfo(name, Level.OVERWORLD, "chunk"), retained, server.registryAccess().lookupOrThrow(Registries.LEVEL_STEM).getOrThrow(LevelStem.OVERWORLD).value().type().value());
         return count;
     }
 
@@ -77,10 +78,10 @@ public class OverworldEdgeDeletion {
                 CompoundTag chunk = storage.read(pos);
                 if (chunk == null) continue;
                 validatePosition(chunk, pos);
-                ChunkStatus status = chunk.read("Status", ChunkStatus.CODEC)
+                ChunkStatus status = VersionCompat.getStatus(chunk)
                         .orElseThrow(() -> new IOException("Invalid chunk status at " + pos));
                 if (status.isBefore(ChunkStatus.NOISE) || chunk.contains("blending_data")) continue;
-                if (chunk.getList("sections").isEmpty()) throw new IOException("Missing chunk sections at " + pos);
+                if (VersionCompat.getCompoundList(chunk, "sections").isEmpty()) throw new IOException("Missing chunk sections at " + pos);
                 chunk.put("blending_data", blending.copy());
                 ((RegionFileStorageAccessor) (Object) storage).lws$write(pos, chunk);
             }
@@ -89,7 +90,7 @@ public class OverworldEdgeDeletion {
     }
 
     static void validatePosition(CompoundTag chunk, ChunkPos pos) throws IOException {
-        if (chunk.getInt("xPos").filter(x -> x == pos.x()).isEmpty() || chunk.getInt("zPos").filter(z -> z == pos.z()).isEmpty()) {
+        if (VersionCompat.getInt(chunk, "xPos").filter(x -> x == pos.x()).isEmpty() || VersionCompat.getInt(chunk, "zPos").filter(z -> z == pos.z()).isEmpty()) {
             throw new IOException("Invalid chunk position at " + pos);
         }
     }

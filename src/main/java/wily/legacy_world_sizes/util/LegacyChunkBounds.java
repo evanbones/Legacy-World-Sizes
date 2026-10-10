@@ -37,7 +37,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public record LegacyChunkBounds(ChunkPos min, ChunkPos max, VoxelShape shape) {
-    public static final Codec<LegacyChunkBounds> CODEC = RecordCodecBuilder.create(i -> i.group(ChunkPos.CODEC.fieldOf("min").forGetter(LegacyChunkBounds::min), ChunkPos.CODEC.fieldOf("max").forGetter(LegacyChunkBounds::max)).apply(i, LegacyChunkBounds::new));
+    public static final Codec<LegacyChunkBounds> CODEC = RecordCodecBuilder.create(i -> i.group(VersionCompat.CHUNK_POS_CODEC.fieldOf("min").forGetter(LegacyChunkBounds::min), VersionCompat.CHUNK_POS_CODEC.fieldOf("max").forGetter(LegacyChunkBounds::max)).apply(i, LegacyChunkBounds::new));
 
     public static final Identifier BEDROCK_WALLS_RANDOM = FactoryAPI.createVanillaLocation("bedrock_walls");
 
@@ -123,7 +123,7 @@ public record LegacyChunkBounds(ChunkPos min, ChunkPos max, VoxelShape shape) {
         boolean upDown = generator instanceof FlatLevelSource;
         PositionalRandomFactory factory = randomState.getOrCreateRandomFactory(BEDROCK_WALLS_RANDOM);
         BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-        for (int y = chunkAccess.getMinY(); y < chunkAccess.getMinY() + chunkAccess.getHeight(); y++) {
+        for (int y = VersionCompat.getMinY(chunkAccess); y < VersionCompat.getMinY(chunkAccess) + chunkAccess.getHeight(); y++) {
             pos.setY(y);
             for (int dx = 0; dx < 16; dx++) {
                 pos.setX(chunkAccess.getPos().getMinBlockX() + dx);
@@ -136,9 +136,9 @@ public record LegacyChunkBounds(ChunkPos min, ChunkPos max, VoxelShape shape) {
                             pos.getZ() <= min.getMinBlockZ() + randomAmount ||
                             pos.getX() >= max.getMinBlockX() - 1 - randomAmount ||
                             pos.getZ() >= max.getMinBlockZ() - 1 - randomAmount || (upDown &&
-                            (pos.getY() <= chunkAccess.getMinY() + randomAmount ||
-                             pos.getY() >= chunkAccess.getMinY() + chunkAccess.getHeight() - 1 - randomAmount))) {
-                        chunkAccess.setBlockState(pos.setY(y), Blocks.BEDROCK.defaultBlockState());
+                            (pos.getY() <= VersionCompat.getMinY(chunkAccess) + randomAmount ||
+                             pos.getY() >= VersionCompat.getMinY(chunkAccess) + chunkAccess.getHeight() - 1 - randomAmount))) {
+                        VersionCompat.setBlockState(chunkAccess, pos.setY(y), Blocks.BEDROCK.defaultBlockState());
                     }
                 }
             }
@@ -182,7 +182,7 @@ public record LegacyChunkBounds(ChunkPos min, ChunkPos max, VoxelShape shape) {
         for (int j = -i; j <= i; j++) {
             for (int k = -i; k <= i; k++) {
                 if (j != 0 || k != 0 || bl) {
-                    for (int l = blockGetter.getMaxY(); l > (blockPos2 == null ? blockGetter.getMinY() : blockPos2.getY()); l--) {
+                    for (int l = VersionCompat.getMaxY(blockGetter); l > (blockPos2 == null ? VersionCompat.getMinY(blockGetter) : blockPos2.getY()); l--) {
                         BlockPos blockPos3 = new BlockPos(blockPos.getX() + j, l, blockPos.getZ() + k);
                         BlockState blockState = blockGetter.getBlockState(blockPos3);
                         if (blockState.isCollisionShapeFullBlock(blockGetter, blockPos3) && (bl || !blockState.is(Blocks.BEDROCK))) {
@@ -229,14 +229,14 @@ public record LegacyChunkBounds(ChunkPos min, ChunkPos max, VoxelShape shape) {
     }
 
     public long findBalancedSeed(RegistryAccess registryAccess, int tries) {
-        MultiNoiseBiomeSource biomeSource = MultiNoiseBiomeSource.createFromPreset(registryAccess.getOrThrow(MultiNoiseBiomeSourceParameterLists.OVERWORLD));
+        MultiNoiseBiomeSource biomeSource = MultiNoiseBiomeSource.createFromPreset(registryAccess.lookupOrThrow(Registries.MULTI_NOISE_BIOME_SOURCE_PARAMETER_LIST).getOrThrow(MultiNoiseBiomeSourceParameterLists.OVERWORLD));
         int actualBiomeWeight = 0;
         int actualBiomeCount = 0;
         long actualSeed = 0;
 
         for (int i = 0; i < tries; i++) {
             long seed = WorldOptions.randomSeed();
-            RandomState randomState = RandomState.create(registryAccess, NoiseGeneratorSettings.OVERWORLD, seed);
+            RandomState randomState = RandomState.create(registryAccess.lookupOrThrow(Registries.NOISE_SETTINGS).getOrThrow(NoiseGeneratorSettings.OVERWORLD).value(), registryAccess.lookupOrThrow(Registries.NOISE), seed);
             Set<Holder<Biome>> set = new HashSet<>();
 
             int xd = Math.max(1, (max().x() - min().x()) / 64);

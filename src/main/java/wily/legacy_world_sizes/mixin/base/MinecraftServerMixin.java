@@ -15,10 +15,17 @@ import wily.legacy_world_sizes.util.LevelHolder;
 @Mixin(MinecraftServer.class)
 public class MinecraftServerMixin {
 
+    //? if >=26.1 {
     @ModifyExpressionValue(method = "createLevels", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;getWorldBorder()Lnet/minecraft/world/level/border/WorldBorder;"))
     private WorldBorder createLevels(WorldBorder original, @Local(ordinal = 1) ServerLevel level) {
         return LevelHolder.withLevel(original, level);
     }
+    //?} else {
+    /*@Inject(method = "createLevels", at = @At("RETURN"))
+    private void createLevels(CallbackInfo ci) {
+        for (ServerLevel level : ((MinecraftServer) (Object) this).getAllLevels()) LevelHolder.withLevel(level.getWorldBorder(), level);
+    }
+    *///?}
 
     @Inject(method = "runServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;initServer()Z"))
     private void init(CallbackInfo ci) {

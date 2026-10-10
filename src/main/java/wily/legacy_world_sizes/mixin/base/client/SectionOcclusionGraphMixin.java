@@ -21,19 +21,28 @@ import java.util.List;
 @Mixin(SectionOcclusionGraph.class)
 public class SectionOcclusionGraphMixin {
     @Inject(method = "addSectionsInFrustum", at = @At("TAIL"))
+    //? if >=26.1 {
     private void legacy_world_sizes$cullSeparatedEndBounds(Frustum frustum, List<SectionRenderDispatcher.RenderSection> visibleSections, List<SectionRenderDispatcher.RenderSection> nearbyVisibleSections, CallbackInfo ci) {
+    //?} else {
+    /*private void legacy_world_sizes$cullSeparatedEndBounds(Frustum frustum, List<SectionRenderDispatcher.RenderSection> visibleSections, CallbackInfo ci) {
+        List<SectionRenderDispatcher.RenderSection> nearbyVisibleSections = List.of();
+    *///?}
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.level == null || minecraft.level.dimension() != Level.END) return;
 
         LegacyLevelLimit limit = LWSWorldOptions.legacyLevelLimits.get().get(Level.END);
         if (limit == null || limit.bounds().size() < 2) return;
 
+        //? if >=26.1 {
         Vec3 cameraPos = minecraft.gameRenderer.getMainCamera().position();
+        //?} else {
+        /*Vec3 cameraPos = minecraft.gameRenderer.getMainCamera().getPosition();
+        *///?}
         int currentBoundIndex = legacy_world_sizes$findBoundIndex(limit, cameraPos.x, cameraPos.z);
         if (currentBoundIndex < 0) return;
 
         visibleSections.removeIf(section -> legacy_world_sizes$isOutsideCurrentEndBound(limit, currentBoundIndex, section));
-        nearbyVisibleSections.removeIf(section -> legacy_world_sizes$isOutsideCurrentEndBound(limit, currentBoundIndex, section));
+        if (!nearbyVisibleSections.isEmpty()) nearbyVisibleSections.removeIf(section -> legacy_world_sizes$isOutsideCurrentEndBound(limit, currentBoundIndex, section));
     }
 
     @Unique
@@ -55,7 +64,11 @@ public class SectionOcclusionGraphMixin {
 
     @Unique
     private static boolean legacy_world_sizes$isOutsideCurrentEndBound(LegacyLevelLimit limit, int currentBoundIndex, SectionRenderDispatcher.RenderSection section) {
+        //? if >=26.1 {
         int targetBoundIndex = legacy_world_sizes$findBoundIndex(limit, SectionPos.x(section.getSectionNode()), SectionPos.z(section.getSectionNode()));
+        //?} else {
+        /*int targetBoundIndex = legacy_world_sizes$findBoundIndex(limit, SectionPos.blockToSectionCoord(section.getOrigin().getX()), SectionPos.blockToSectionCoord(section.getOrigin().getZ()));
+        *///?}
         return targetBoundIndex >= 0 && targetBoundIndex != currentBoundIndex;
     }
 }

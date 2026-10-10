@@ -28,7 +28,11 @@ import java.util.List;
 
 @Mixin(EnderDragonFight.class)
 public abstract class EndDragonFightMixin {
+    //? if >=26.1 {
     @Shadow @Final private List<Integer> gateways;
+    //?} else {
+    /*@Shadow @Final private it.unimi.dsi.fastutil.objects.ObjectArrayList<Integer> gateways;
+    *///?}
 
     @Shadow protected abstract void spawnNewGateway(BlockPos blockPos);
 
@@ -55,7 +59,7 @@ public abstract class EndDragonFightMixin {
             int j = Mth.floor(ray * Math.cos(2.0 * (-Math.PI + (Math.PI / LWSWorldOptions.maxEndGateways.get()) * i)));
             int k = Mth.floor(ray * Math.sin(2.0 * (-Math.PI + (Math.PI / LWSWorldOptions.maxEndGateways.get()) * i)));
             BlockPos gatewayPos = new BlockPos(j, 75, k);
-            if (limit != null && limit.bounds().size() > i) {
+            if (limit != null && limit.bounds().size() > i + 1) {
                 LegacyChunkBounds chunkBounds = limit.bounds().get(i + 1);
                 BlockPos blockPos2 = chunkBounds.findOrCreateValidTeleportPos(level).above(10);
                 Feature.END_GATEWAY.place(EndGatewayConfiguration.knownExit(blockPos2, false), level, level.getChunkSource().getGenerator(), RandomSource.create(), gatewayPos);

@@ -21,7 +21,11 @@ public class SpikeFeatureMixin {
         }
     }
 
+    //? if >=1.21.2 {
     @ModifyExpressionValue(method = "placeSpike", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/ServerLevelAccessor;getMinY()I"))
+    //?} else {
+    /*@ModifyExpressionValue(method = "placeSpike", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/ServerLevelAccessor;getMinBuildHeight()I"))
+    *///?}
     private int placeSpike(int original) {
         return LWSWorldOptions.legacyEndSpikes.get() ? original + 1 : original;
     }

@@ -25,9 +25,13 @@ import wily.factoryapi.base.config.FactoryConfig;
 import wily.factoryapi.base.config.FactoryConfigControl;
 import wily.factoryapi.base.config.FactoryConfigDisplay;
 import wily.legacy.client.CommonColor;
-import wily.legacy.client.LegacyOptions;
 import wily.legacy.client.screen.*;
+//? if >=26.1 {
+import wily.legacy.client.LegacyOptions;
 import wily.legacy.util.client.LegacyFontUtil;
+//?} else {
+/*import net.minecraft.client.gui.screens.Screen;
+*///?}
 import wily.legacy_world_sizes.LegacyWorldSizes;
 import wily.legacy_world_sizes.config.LWSWorldOptions;
 import wily.legacy_world_sizes.util.LegacyWorldSize;
@@ -71,7 +75,11 @@ public class WorldMoreOptionsScreenMixin extends PanelVListScreen {
     @Unique
     private TickBox legacyWorldSizes$overwriteBox;
 
+    //? if >=26.1 {
     public WorldMoreOptionsScreenMixin(Panel.Constructor<PanelVListScreen> panelConstructor, Component component) {
+    //?} else {
+    /*public WorldMoreOptionsScreenMixin(Function<Screen, Panel> panelConstructor, Component component) {
+    *///?}
         super(panelConstructor, component);
     }
 
@@ -104,8 +112,13 @@ public class WorldMoreOptionsScreenMixin extends PanelVListScreen {
     private <T> void addLabeledConfigSlider(int index, FactoryConfig<T> config) {
         FactoryConfigControl.FromInt<T> c = (FactoryConfigControl.FromInt<T>) config.control();
         Function<T, Tooltip> tooltipFunction = (v) -> FactoryConfigWidgets.getCachedTooltip(config.getDisplay().tooltip().apply(v));
+        //? if >=26.1 {
         renderableVList.renderables.add(index, LegacySliderButton.createFromInt(0, 0, 200, 16, (s) -> config.getDisplay().valueToComponent().apply(s.getObjectValue()), (s) -> tooltipFunction.apply(s.getObjectValue()), config.get(), c.valueGetter(), c.valueSetter(), c.valuesSize(), (s) -> FactoryConfig.saveOptionAndConsume(config, s.getObjectValue(), config::setDefault), config));
         renderableVList.renderables.add(index, new RenderableVList.LayoutText(config.getDisplay().name(), CommonColor.GRAY_TEXT, () -> LegacyOptions.getUIMode().isSD() ? 9 : 13));
+        //?} else {
+        /*renderableVList.renderables.add(index, LegacySliderButton.createFromInt(0, 0, 200, 16, (s) -> config.getDisplay().valueToComponent().apply(s.getObjectValue()), (s) -> tooltipFunction.apply(s.getObjectValue()), config.get(), c.valueGetter(), c.valueSetter(), c.valuesSize(), (s) -> FactoryConfig.saveOptionAndConsume(config, s.getObjectValue(), config::setDefault)));
+        renderableVList.renderables.add(index, SimpleLayoutRenderable.createDrawString(config.getDisplay().name(), 1, 2, 0, 9, CommonColor.INVENTORY_GRAY_TEXT.get(), false));
+        *///?}
     }
 
     @Unique
@@ -113,10 +126,14 @@ public class WorldMoreOptionsScreenMixin extends PanelVListScreen {
         Path world = Minecraft.getInstance().getLevelSource().getBaseDir().resolve(screen.summary.getLevelId());
         legacyWorldSizes$configPath = DimensionType.getStorageFolder(Level.OVERWORLD, world).resolve("config/legacy_world_sizes.json");
         if (Files.exists(legacyWorldSizes$configPath.resolveSibling("legacy_world_sizes_upgrade.json"))) {
-            boolean sd = LegacyOptions.getUIMode().isSD();
             var message = Component.translatable("legacy_world_sizes.upgrade.pending");
+            //? if >=26.1 {
+            boolean sd = LegacyOptions.getUIMode().isSD();
             if (sd) message.withStyle(style -> style.withFont(LegacyFontUtil.MOJANGLES_11_FONT));
             renderableVList.renderables.add(0, new AdvancedTextWidget(accessor).lineSpacing(sd ? 8 : 12).withLines(message, panel.width - 20).withColor(CommonColor.GRAY_TEXT.get()).withShadow(false));
+            //?} else {
+            /*renderableVList.renderables.add(0, new AdvancedTextWidget(accessor).lineSpacing(12).withLines(message, panel.width - 20).withColor(CommonColor.INVENTORY_GRAY_TEXT.get()).withShadow(false));
+            *///?}
             return;
         }
         Path source = Files.isRegularFile(legacyWorldSizes$configPath) ? legacyWorldSizes$configPath : world.resolve("config/legacy_world_sizes.json");
@@ -149,18 +166,27 @@ public class WorldMoreOptionsScreenMixin extends PanelVListScreen {
             legacyWorldSizes$saveUpgrade(s.getObjectValue(), legacyWorldSizes$overwriteEdge);
             s.setObjectValue(legacyWorldSizes$selectedSize);
             s.updateMessage();
-        }, () -> legacyWorldSizes$selectedSize);
+        }
+        //? if >=26.1 {
+        , () -> legacyWorldSizes$selectedSize
+        //?}
+        );
         legacyWorldSizes$overwriteBox = new TickBox(0, 0, 200, legacyWorldSizes$overwriteEdge, value -> Component.translatable("legacy_world_sizes.options.overwriteWorldEdge"), value -> null, box -> {
             if (!box.selected) {
                 legacyWorldSizes$saveUpgrade(legacyWorldSizes$selectedSize, false);
                 return;
             }
             box.selected = false;
+            //? if >=26.1
             box.updateMessage();
             minecraft.setScreen(new ConfirmationScreen(this, Component.translatable("legacy_world_sizes.options.overwriteWorldEdge"), Component.translatable("legacy_world_sizes.upgrade.overwrite_warning"), confirmation -> {
                 if (legacyWorldSizes$saveUpgrade(legacyWorldSizes$selectedSize, true)) confirmation.onClose();
             }));
-        }, () -> legacyWorldSizes$overwriteEdge);
+        }
+        //? if >=26.1 {
+        , () -> legacyWorldSizes$overwriteEdge
+        //?}
+        );
         legacyWorldSizes$overwriteBox.active = legacyWorldSizes$selectedSize != legacyWorldSizes$appliedSize;
         renderableVList.renderables.add(0, legacyWorldSizes$sizeSlider);
         renderableVList.renderables.add(1, legacyWorldSizes$overwriteBox);
@@ -181,6 +207,7 @@ public class WorldMoreOptionsScreenMixin extends PanelVListScreen {
             legacyWorldSizes$overwriteEdge = overwrite;
             legacyWorldSizes$overwriteBox.active = size != legacyWorldSizes$appliedSize;
             legacyWorldSizes$overwriteBox.selected = overwrite;
+            //? if >=26.1
             legacyWorldSizes$overwriteBox.updateMessage();
             return true;
         } catch (IOException | RuntimeException err) {
@@ -221,6 +248,10 @@ public class WorldMoreOptionsScreenMixin extends PanelVListScreen {
 
     @Unique
     private boolean isLegacySettingsMenusEnabled() {
-       return LegacyOptions.legacySettingsMenus.get();
+        //? if >=26.1 {
+        return LegacyOptions.legacySettingsMenus.get();
+        //?} else {
+        /*return false;
+        *///?}
     }
 }

@@ -65,7 +65,7 @@ dependencies {
 
 	api("wily.factory_api:factory_api-neoforge:${stonecutter.current.version}-${prop("factory_api_version")}")
 	compileOnly(rootProject.fileTree("leg four jay"))
-	compileOnly("wily.legacy:legacy-neoforge:${stonecutter.current.version}-${prop("legacy4j_version")}")
+	compileOnly("wily.legacy:legacy-neoforge:${stonecutter.current.version}-${prop("legacy4j_version")}") { isTransitive = false }
 }
 
 tasks.withType<Javadoc> {

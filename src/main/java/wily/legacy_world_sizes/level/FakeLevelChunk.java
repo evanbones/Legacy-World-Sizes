@@ -18,26 +18,27 @@ import net.minecraft.world.level.chunk.ProtoChunk;
 import net.minecraft.world.level.chunk.UpgradeData;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraft.world.level.levelgen.blending.BlendingData;
+import wily.legacy_world_sizes.util.VersionCompat;
 import net.minecraft.world.ticks.LevelChunkTicks;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class FakeLevelChunk extends LevelChunk {
     private final Holder<Biome> biome;
 
     public FakeLevelChunk(ServerLevel level, ChunkPos chunkPos, LevelChunkSection[] sections, boolean hasBlending, Holder<Biome> biome) {
-        super(level, chunkPos, UpgradeData.EMPTY, new LevelChunkTicks<>(), new LevelChunkTicks<>(), 0L, sections, null, hasBlending ? BlendingData.unpack(new BlendingData.Packed(SectionPos.blockToSectionCoord(-64), SectionPos.blockToSectionCoord(320), Optional.empty())) : null);
+        super(level, chunkPos, UpgradeData.EMPTY, new LevelChunkTicks<>(), new LevelChunkTicks<>(), 0L, sections, null, hasBlending ? VersionCompat.createBlendingData(SectionPos.blockToSectionCoord(-64), SectionPos.blockToSectionCoord(320)) : null);
         this.biome = biome;
     }
 
+    //? if >=1.21.2 {
     @Override
     public boolean tryMarkSaved() {
         return false;
     }
+    //?}
 
     @Override
     public boolean isUnsaved() {
@@ -46,7 +47,11 @@ public class FakeLevelChunk extends LevelChunk {
 
     @Nullable
     @Override
+    //? if >=1.21.5 {
     public BlockState setBlockState(BlockPos blockPos, BlockState blockState, int i) {
+    //?} else {
+    /*public BlockState setBlockState(BlockPos blockPos, BlockState blockState, boolean bl) {
+    *///?}
         return null;
     }
 
@@ -94,7 +99,11 @@ public class FakeLevelChunk extends LevelChunk {
     }
 
     @Override
+    //? if >=1.21.2 {
     public void postProcessGeneration(ServerLevel serverLevel) {
+    //?} else {
+    /*public void postProcessGeneration() {
+    *///?}
     }
 
     @Override
@@ -111,12 +120,12 @@ public class FakeLevelChunk extends LevelChunk {
 
             int seaLevel = level.getSeaLevel();
 
-            for (int h = level.getMinY(); h < seaLevel; h++) {
-                BlockState blockState = h == level.getMinY() ? Blocks.BEDROCK.defaultBlockState() : h > seaLevel - 10 ? Blocks.WATER.defaultBlockState() : Blocks.STONE.defaultBlockState();
+            for (int h = VersionCompat.getMinY(level); h < seaLevel; h++) {
+                BlockState blockState = h == VersionCompat.getMinY(level) ? Blocks.BEDROCK.defaultBlockState() : h > seaLevel - 10 ? Blocks.WATER.defaultBlockState() : Blocks.STONE.defaultBlockState();
 
                 for (int k = 0; k < 16; k++) {
                     for (int l = 0; l < 16; l++) {
-                        chunk.setBlockState(mutableBlockPos.set(k, h, l), blockState);
+                        VersionCompat.setBlockState(chunk, mutableBlockPos.set(k, h, l), blockState);
                         heightmap.update(k, h, l, blockState);
                         heightmap2.update(k, h, l, blockState);
                     }
@@ -130,14 +139,14 @@ public class FakeLevelChunk extends LevelChunk {
             Heightmap heightmap = chunk.getOrCreateHeightmapUnprimed(Heightmap.Types.OCEAN_FLOOR_WG);
             Heightmap heightmap2 = chunk.getOrCreateHeightmapUnprimed(Heightmap.Types.WORLD_SURFACE_WG);
 
-            int max = level.getMinY() + 4;
+            int max = VersionCompat.getMinY(level) + 4;
 
-            for (int h = level.getMinY(); h < max; h++) {
-                BlockState blockState = h == level.getMinY() ? Blocks.BEDROCK.defaultBlockState() : h == max - 1 ? Blocks.GRASS_BLOCK.defaultBlockState() : Blocks.DIRT.defaultBlockState();
+            for (int h = VersionCompat.getMinY(level); h < max; h++) {
+                BlockState blockState = h == VersionCompat.getMinY(level) ? Blocks.BEDROCK.defaultBlockState() : h == max - 1 ? Blocks.GRASS_BLOCK.defaultBlockState() : Blocks.DIRT.defaultBlockState();
 
                 for (int k = 0; k < 16; k++) {
                     for (int l = 0; l < 16; l++) {
-                        chunk.setBlockState(mutableBlockPos.set(k, h, l), blockState);
+                        VersionCompat.setBlockState(chunk, mutableBlockPos.set(k, h, l), blockState);
                         heightmap.update(k, h, l, blockState);
                         heightmap2.update(k, h, l, blockState);
                     }

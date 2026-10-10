@@ -3,6 +3,7 @@ package wily.legacy_world_sizes.util;
 import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.ChunkPos;
@@ -27,7 +28,7 @@ public record LegacyWorldSize(Identifier id, Component name, Consumer<ApplyConte
     public static final Codec<LegacyWorldSize> CODEC = map.createCodec(Identifier.CODEC);
 
     public static final LegacyWorldSize CLASSIC = register(new LegacyWorldSize(LegacyWorldSizes.createModLocation("classic"), LWSComponents.optionName("worldSizes.classic"), ctx -> {
-        LWSWorldOptions.legacyLevelLimits.set(Map.of(Level.OVERWORLD, new LegacyLevelLimit(List.of(new LegacyChunkBounds(new ChunkPos(-27, -27), new ChunkPos(27, 27))), true, getChunkContent(ctx), Optional.of(ctx.registry().getOrThrow(Biomes.PLAINS)), false), Level.NETHER, new LegacyLevelLimit(List.of(new LegacyChunkBounds(new ChunkPos(-9, -9), new ChunkPos(9, 9))), false, FakeLevelChunk.ContentType.NONE, Optional.empty(), true), Level.END, new LegacyLevelLimit(List.of(new LegacyChunkBounds(new ChunkPos(-6, -6), new ChunkPos(6, 6))), false, FakeLevelChunk.ContentType.NONE, Optional.empty(), false)));
+        LWSWorldOptions.legacyLevelLimits.set(Map.of(Level.OVERWORLD, new LegacyLevelLimit(List.of(new LegacyChunkBounds(new ChunkPos(-27, -27), new ChunkPos(27, 27))), true, getChunkContent(ctx), Optional.of(ctx.registry().lookupOrThrow(Registries.BIOME).getOrThrow(Biomes.PLAINS)), false), Level.NETHER, new LegacyLevelLimit(List.of(new LegacyChunkBounds(new ChunkPos(-9, -9), new ChunkPos(9, 9))), false, FakeLevelChunk.ContentType.NONE, Optional.empty(), true), Level.END, new LegacyLevelLimit(List.of(new LegacyChunkBounds(new ChunkPos(-6, -6), new ChunkPos(6, 6))), false, FakeLevelChunk.ContentType.NONE, Optional.empty(), false)));
         LWSWorldOptions.maxEndGateways.set(1);
         LWSWorldOptions.endOuterIslandsRay.set(18);
         LWSWorldOptions.endSpawnPoint.set(LEGACY_END_SPAWN_POINT);
@@ -35,7 +36,7 @@ public record LegacyWorldSize(Identifier id, Component name, Consumer<ApplyConte
     }));
 
     public static final LegacyWorldSize SMALL = register(new LegacyWorldSize(LegacyWorldSizes.createModLocation("small"), LWSComponents.optionName("worldSizes.small"), ctx -> {
-        LWSWorldOptions.legacyLevelLimits.set(Map.of(Level.OVERWORLD, new LegacyLevelLimit(List.of(new LegacyChunkBounds(new ChunkPos(-32, -32), new ChunkPos(32, 32))), true, getChunkContent(ctx), Optional.of(ctx.registry().getOrThrow(Biomes.PLAINS)), false), Level.NETHER, new LegacyLevelLimit(List.of(new LegacyChunkBounds(new ChunkPos(-11, -11), new ChunkPos(11, 11))), false, FakeLevelChunk.ContentType.NONE, Optional.empty(), true), Level.END, new LegacyLevelLimit(List.of(new LegacyChunkBounds(new ChunkPos(-6, -6), new ChunkPos(6, 6))), false, FakeLevelChunk.ContentType.NONE, Optional.empty(), false)));
+        LWSWorldOptions.legacyLevelLimits.set(Map.of(Level.OVERWORLD, new LegacyLevelLimit(List.of(new LegacyChunkBounds(new ChunkPos(-32, -32), new ChunkPos(32, 32))), true, getChunkContent(ctx), Optional.of(ctx.registry().lookupOrThrow(Registries.BIOME).getOrThrow(Biomes.PLAINS)), false), Level.NETHER, new LegacyLevelLimit(List.of(new LegacyChunkBounds(new ChunkPos(-11, -11), new ChunkPos(11, 11))), false, FakeLevelChunk.ContentType.NONE, Optional.empty(), true), Level.END, new LegacyLevelLimit(List.of(new LegacyChunkBounds(new ChunkPos(-6, -6), new ChunkPos(6, 6))), false, FakeLevelChunk.ContentType.NONE, Optional.empty(), false)));
         LWSWorldOptions.maxEndGateways.set(4);
         LWSWorldOptions.endOuterIslandsRay.set(128);
         LWSWorldOptions.endSpawnPoint.set(LEGACY_END_SPAWN_POINT);
@@ -43,7 +44,7 @@ public record LegacyWorldSize(Identifier id, Component name, Consumer<ApplyConte
     }));
 
     public static final LegacyWorldSize MEDIUM = register(new LegacyWorldSize(LegacyWorldSizes.createModLocation("medium"), LWSComponents.optionName("worldSizes.medium"), ctx -> {
-        LWSWorldOptions.legacyLevelLimits.set(Map.of(Level.OVERWORLD, new LegacyLevelLimit(List.of(new LegacyChunkBounds(new ChunkPos(-96, -96), new ChunkPos(96, 96))), true, getChunkContent(ctx), Optional.of(ctx.registry().getOrThrow(Biomes.PLAINS)), false), Level.NETHER, new LegacyLevelLimit(List.of(new LegacyChunkBounds(new ChunkPos(-16, -16), new ChunkPos(16, 16))), false, FakeLevelChunk.ContentType.NONE, Optional.empty(), true), Level.END, new LegacyLevelLimit(List.of(new LegacyChunkBounds(new ChunkPos(-6, -6), new ChunkPos(6, 6))), false, FakeLevelChunk.ContentType.NONE, Optional.empty(), false)));
+        LWSWorldOptions.legacyLevelLimits.set(Map.of(Level.OVERWORLD, new LegacyLevelLimit(List.of(new LegacyChunkBounds(new ChunkPos(-96, -96), new ChunkPos(96, 96))), true, getChunkContent(ctx), Optional.of(ctx.registry().lookupOrThrow(Registries.BIOME).getOrThrow(Biomes.PLAINS)), false), Level.NETHER, new LegacyLevelLimit(List.of(new LegacyChunkBounds(new ChunkPos(-16, -16), new ChunkPos(16, 16))), false, FakeLevelChunk.ContentType.NONE, Optional.empty(), true), Level.END, new LegacyLevelLimit(List.of(new LegacyChunkBounds(new ChunkPos(-6, -6), new ChunkPos(6, 6))), false, FakeLevelChunk.ContentType.NONE, Optional.empty(), false)));
         LWSWorldOptions.maxEndGateways.set(4);
         LWSWorldOptions.endOuterIslandsRay.set(128);
         LWSWorldOptions.endSpawnPoint.set(LEGACY_END_SPAWN_POINT);
@@ -51,7 +52,7 @@ public record LegacyWorldSize(Identifier id, Component name, Consumer<ApplyConte
     }));
 
     public static final LegacyWorldSize LARGE = register(new LegacyWorldSize(LegacyWorldSizes.createModLocation("large"), LWSComponents.optionName("worldSizes.large"), ctx -> {
-        LWSWorldOptions.legacyLevelLimits.set(Map.of(Level.OVERWORLD, new LegacyLevelLimit(List.of(new LegacyChunkBounds(new ChunkPos(-160, -160), new ChunkPos(160, 160))), true, getChunkContent(ctx), Optional.of(ctx.registry().getOrThrow(Biomes.PLAINS)), false), Level.NETHER, new LegacyLevelLimit(List.of(new LegacyChunkBounds(new ChunkPos(-20, -20), new ChunkPos(20, 20))), false, FakeLevelChunk.ContentType.NONE, Optional.empty(), true), Level.END, new LegacyLevelLimit(List.of(new LegacyChunkBounds(new ChunkPos(-6, -6), new ChunkPos(6, 6))), false, FakeLevelChunk.ContentType.NONE, Optional.empty(), false)));
+        LWSWorldOptions.legacyLevelLimits.set(Map.of(Level.OVERWORLD, new LegacyLevelLimit(List.of(new LegacyChunkBounds(new ChunkPos(-160, -160), new ChunkPos(160, 160))), true, getChunkContent(ctx), Optional.of(ctx.registry().lookupOrThrow(Registries.BIOME).getOrThrow(Biomes.PLAINS)), false), Level.NETHER, new LegacyLevelLimit(List.of(new LegacyChunkBounds(new ChunkPos(-20, -20), new ChunkPos(20, 20))), false, FakeLevelChunk.ContentType.NONE, Optional.empty(), true), Level.END, new LegacyLevelLimit(List.of(new LegacyChunkBounds(new ChunkPos(-6, -6), new ChunkPos(6, 6))), false, FakeLevelChunk.ContentType.NONE, Optional.empty(), false)));
         LWSWorldOptions.maxEndGateways.set(4);
         LWSWorldOptions.endOuterIslandsRay.set(128);
         LWSWorldOptions.endSpawnPoint.set(LEGACY_END_SPAWN_POINT);
@@ -65,7 +66,7 @@ public record LegacyWorldSize(Identifier id, Component name, Consumer<ApplyConte
     }
 
     public static boolean isOverworldFlat(RegistryAccess access) {
-        return access.getOrThrow(LevelStem.OVERWORLD).value().generator() instanceof FlatLevelSource;
+        return access.lookupOrThrow(Registries.LEVEL_STEM).getOrThrow(LevelStem.OVERWORLD).value().generator() instanceof FlatLevelSource;
     }
 
     public record ApplyContext(RegistryAccess registry) {

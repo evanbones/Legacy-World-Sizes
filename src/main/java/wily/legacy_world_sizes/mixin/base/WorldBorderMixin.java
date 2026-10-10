@@ -1,6 +1,7 @@
 package wily.legacy_world_sizes.mixin.base;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.border.WorldBorder;
@@ -44,8 +45,18 @@ public class WorldBorderMixin implements LevelHolder {
         return original;
     }
 
+    //? if >=1.21.2 {
     @ModifyReturnValue(method = "clampVec3ToBound(DDD)Lnet/minecraft/world/phys/Vec3;", at = @At("RETURN"))
     private Vec3 clampVec3ToBound(Vec3 original) {
+    //?} else {
+    /*@ModifyReturnValue(method = "clampToBounds(DDD)Lnet/minecraft/core/BlockPos;", at = @At("RETURN"))
+    private BlockPos clampToBounds(BlockPos original) {
+        return BlockPos.containing(clampVec3ToBound(Vec3.atLowerCornerOf(original)));
+    }
+
+    @Unique
+    private Vec3 clampVec3ToBound(Vec3 original) {
+    *///?}
         if (getLevel() != null) {
             LegacyLevelLimit limit = LWSWorldOptions.legacyLevelLimits.get().get(getLevel().dimension());
             if (limit != null) {
